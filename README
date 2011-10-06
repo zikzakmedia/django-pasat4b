@@ -1,0 +1,71 @@
+==============
+django-pasat4b
+==============
+
+Django 4b es una aplicación muy al estilo de django-paypal o django-sermepa para usar el TPV Virtual de Pasat Internet 4b
+
+Para utilizarlo sigue los siguientes pasos
+
+1. Instalar: 
+
+    python setup.py install
+
+2. Añadir INSTALLED_APPS
+
+    INSTALLED_APPS = (
+        ...
+        'pasat4b.pasat4b',
+    )
+
+3. Actualizar modelo:
+
+    python manage.py syncdb
+
+4. Añade los siguientes settings:
+
+    PASAT4B_MERCHANT_CODE = '000000000'
+    PASAT4B_BUTTON_IMG = '/static/images/icons/pasat4b.png'
+
+    Deberás modificar PASAT4B_MERCHANT_CODE, PASAT4B_BUTTON_IMG
+
+5. Diseña tu vista para que los datos sean enviados a Pasat 4b:
+
+    from pasat4b.pasat4b.forms import pasat4bPaymentForm
+    from pasat4b.pasat4b.signals import payment_was_successful, payment_was_error, signature_error
+
+    pasat4b_dict = {
+        "Ds_Merchant_Order": order.name,
+        "Ds_Merchant_MerchantCode": PASAT4B_MERCHANT_CODE,
+    }
+
+    form = pasat4bPaymentForm(initial=pasat4b_dict)
+
+    return HttpResponse(render_to_response('pasat4b/form.html', locals(), context_instance=RequestContext(request)))
+
+6. Diseña tus urls:
+
+    (r'^payment/4b/getorder', 'payment.pasat4b.views.pasat4b_getorder'),
+    (r'^payment/4b/ipn', 'payment.pasat4b.views.pasat4b_ipn'),
+    (r'^payment/4b/error', 'payment.pasat4b.views.pasat4b_error'),
+    (r'^payment/4b/confirm', 'payment.pasat4b.views.pasat4b_confirm'),
+    (r'^payment/4b/', 'payment.pasat4b.views.index'),
+
+7. Programa las señales de OK, KO y si quieres de error::
+ 
+    from pasat4b.pasat4b.signals import payment_was_successful, payment_was_error, signature_error
+
+    def payment_ok(sender, **kwargs):
+        pass
+
+    def payment_ko(sender, **kwargs):
+        pass
+
+    def pasat4b_ipn_error(sender, **kwargs):
+        pass
+
+    payment_was_successful.connect(payment_ok)
+    payment_was_error.connect(payment_ko)
+ 
+7. Utiliza el form de pasat4bPaymentForm para inicializar el botón de pago, al estilo Paypal. 
+ 
+8. Relájate, sírvete un "pa amb tomàquet" y espera a hacerte rico.
